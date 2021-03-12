@@ -1,14 +1,16 @@
 # Overview:
 
-The docker image (pdfviewer-server) contains Web APIs mandatory for PDF Viewer control such as opening, text selection, text search, and saving pdf documents. You can build your own docker file to add new functionality and customize the existing functionalities from the existing docker project using this repository. 
+The Syncfusion PDF Viewer control allows you to view, print, form-fill, and annotate PDF files in your web applications. This PDF Viewer control requires a server-side backend Web API service to render PDF contents.
+
+This Docker image is the predefined Docker container of Syncfusion’s PDF Viewer backend. You can deploy it quickly to your infrastructure.
 
 # Prerequisites 
 
-Have ‘Docker’ installed in your environment: 
+Have [Docker](https://www.docker.com/products/container-runtime#/download) installed in your environment: 
 
-•	On Windows, install Docker for Windows. 
+•	On Windows, install [Docker for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows). 
 
-•	On macOS, install Docker for Mac. 
+•	On macOS, install [Docker for Mac](https://hub.docker.com/editions/community/docker-ce-desktop-windows).
 
 
 # Configure the PDF Viewer server-side service 
@@ -21,7 +23,7 @@ Step 1: Pull the pdfviewer-server image from Docker Hub.
 docker pull syncfusion/pdfviewer-server 
 ```
 
-Note: PDF Viewer is a commercial product, and it requires a valid license to use it in a production environment (request license or trial key) 
+**NOTE:** PDF Viewer is a commercial product, and it requires a valid license to use it in a production environment [request license or trial key](https://help.syncfusion.com/common/essential-studio/licensing/licensing-faq/where-can-i-get-a-license-key). 
  
 Step 2: Create the docker-compose.yml file with the following code in your file system. 
   
@@ -40,7 +42,7 @@ services:
     - "6001:80" 
 ```
 
-N> You should mention the folder path which contains pdf files in the volumes section of compose file. 
+**NOTE:** You should mention the folder path which contains pdf files in the volumes section of compose file. 
  
 Step 3: In a terminal tab, navigate to the directory where you’ve placed the docker-compose.yml file and execute the following. 
 
