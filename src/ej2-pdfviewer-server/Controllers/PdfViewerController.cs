@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using System.IO;
 using Syncfusion.EJ2.PdfViewer;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Drawing;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.Extensions.Caching.Distributed;
@@ -24,7 +24,7 @@ namespace ej2_pdfviewer_web_service.Controllers
         private IDistributedCache _dCache;
         private IConfiguration _configuration;
         private int _slidingTime = 0;
-
+        string path;
         public PdfViewerController(IMemoryCache memoryCache, IHostingEnvironment hostingEnvironment,IDistributedCache cache, IConfiguration configuration)
         {
             _mCache = memoryCache;
@@ -32,19 +32,24 @@ namespace ej2_pdfviewer_web_service.Controllers
             _hostingEnvironment = hostingEnvironment;
             _configuration = configuration;
             _slidingTime = int.Parse(_configuration["DOCUMENT_SLIDING_EXPIRATION_TIME"]);
+            path = _configuration["DOCUMENT_PATH"];
+            //check the document path environment variable value and assign default data folder
+            //if it is null.
+            path = string.IsNullOrEmpty(path) ? Path.Combine(_hostingEnvironment.ContentRootPath, "Data") : Path.Combine(_hostingEnvironment.ContentRootPath, path);
         }
 
         [AcceptVerbs("Post")]
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("Load")]
-        public IActionResult Load([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult Load([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache,_slidingTime);
             MemoryStream stream = new MemoryStream();
             object jsonResult = new object();
             if (jsonObject != null && jsonObject.ContainsKey("document"))
@@ -80,7 +85,7 @@ namespace ej2_pdfviewer_web_service.Controllers
                 }
             }
             jsonResult = pdfviewer.Load(stream, jsonObject);
-            return Content(JsonConvert.SerializeObject(jsonResult));
+            return Content(JsonSerializer.Serialize(jsonResult));
         }
 
      async Task<MemoryStream> GetDocumentFromURL(string url)
@@ -101,58 +106,62 @@ namespace ej2_pdfviewer_web_service.Controllers
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("Bookmarks")]
-        public IActionResult Bookmarks([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult Bookmarks([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             object jsonResult = pdfviewer.GetBookmarks(jsonObject);
-            return Content(JsonConvert.SerializeObject(jsonResult));
+            return Content(JsonSerializer.Serialize(jsonResult));
         }
 
         [AcceptVerbs("Post")]
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("RenderPdfPages")]
-        public IActionResult RenderPdfPages([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult RenderPdfPages([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             object jsonResult = pdfviewer.GetPage(jsonObject);
-            return Content(JsonConvert.SerializeObject(jsonResult));
+            return Content(JsonSerializer.Serialize(jsonResult));
         }
 
         [AcceptVerbs("Post")]
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("RenderAnnotationComments")]
-        public IActionResult RenderAnnotationComments([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult RenderAnnotationComments([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             object jsonResult = pdfviewer.GetAnnotationComments(jsonObject);
-            return Content(JsonConvert.SerializeObject(jsonResult));
+            return Content(JsonSerializer.Serialize(jsonResult));
         }
 
         [AcceptVerbs("Post")]
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("Unload")]
-        public IActionResult Unload([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult Unload([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             pdfviewer.ClearCache(jsonObject);
             return this.Content("Document cache is cleared");
         }
@@ -161,57 +170,96 @@ namespace ej2_pdfviewer_web_service.Controllers
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("RenderThumbnailImages")]
-        public IActionResult RenderThumbnailImages([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult RenderThumbnailImages([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             object result = pdfviewer.GetThumbnailImages(jsonObject);
-            return Content(JsonConvert.SerializeObject(result));
+            return Content(JsonSerializer.Serialize(result));
         }
 
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("Download")]
-        public IActionResult Download([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult Download([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             string documentBase = pdfviewer.GetDocumentAsBase64(jsonObject);
             return Content(documentBase);
+        }
+
+        [HttpPost]
+        [EnableCors("AllowAllOrigins")]
+        [Route("SaveUrl")]
+        public async Task<IActionResult> SaveUrl([FromBody] Dictionary<string, object> args)
+        {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
+            PdfRenderer pdfviewer;
+            if (Startup.isRedisCacheEnable)
+                pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
+            else
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
+            try
+            {
+                HttpClient client = new HttpClient();
+                Dictionary<string, string> RequestDetails = new Dictionary<string, string>();
+                RequestDetails.Add("Url", jsonObject["RequestedUrl"]);
+                RequestDetails.Add("base64", jsonObject["base64Data"]);
+                string jsonString = JsonSerializer.Serialize(RequestDetails);
+                StringContent Data = new StringContent(jsonString);
+                string UriAddress = jsonObject["UriAddress"];
+                var result = await client.PutAsync(UriAddress, Data);
+                if (result.StatusCode.ToString() == "OK")
+                {
+                    return Content("Document saved successfully!");
+                }
+                else
+                {
+                    return Content("Failed to save the document!");
+                }
+            } catch (Exception exception)
+            {
+                return Content(exception.Message);
+            }
         }
 
         [AcceptVerbs("Post")]
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("PrintImages")]
-        public IActionResult PrintImages([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult PrintImages([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             object pageImage = pdfviewer.GetPrintImage(jsonObject);
-            return Content(JsonConvert.SerializeObject(pageImage));
+            return Content(JsonSerializer.Serialize(pageImage));
         }
 
         [AcceptVerbs("Post")]
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("ExportAnnotations")]
-        public IActionResult ExportAnnotations([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult ExportAnnotations([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             string jsonResult = pdfviewer.ExportAnnotation(jsonObject);
             return Content(jsonResult);
         }
@@ -220,13 +268,14 @@ namespace ej2_pdfviewer_web_service.Controllers
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("ImportAnnotations")]
-        public IActionResult ImportAnnotations([FromBody] Dictionary<string, string> jsonObject)
+        public IActionResult ImportAnnotations([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             string jsonResult = string.Empty;
             object JsonResult;
             if (jsonObject != null && jsonObject.ContainsKey("fileName"))
@@ -247,7 +296,7 @@ namespace ej2_pdfviewer_web_service.Controllers
                 if (extension != ".xfdf")
                 {
                     JsonResult = pdfviewer.ImportAnnotation(jsonObject);
-                    return Content(JsonConvert.SerializeObject(JsonResult));
+                    return Content(JsonSerializer.Serialize(JsonResult));
                 }
                 else
                 {
@@ -257,7 +306,7 @@ namespace ej2_pdfviewer_web_service.Controllers
                         byte[] bytes = System.IO.File.ReadAllBytes(documentPath);
                         jsonObject["importedData"] = Convert.ToBase64String(bytes);
                         JsonResult = pdfviewer.ImportAnnotation(jsonObject);
-                        return Content(JsonConvert.SerializeObject(JsonResult));
+                        return Content(JsonSerializer.Serialize(JsonResult));
                     }
                     else
                     {
@@ -273,13 +322,14 @@ namespace ej2_pdfviewer_web_service.Controllers
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("ExportFormFields")]
-        public IActionResult ExportFormFields(Dictionary<string, string> jsonObject)
+        public IActionResult ExportFormFields([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             string jsonResult = pdfviewer.ExportFormFields(jsonObject);
             return Content(jsonResult);
         }
@@ -287,15 +337,16 @@ namespace ej2_pdfviewer_web_service.Controllers
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("ImportFormFields")]
-        public IActionResult ImportFormFields(Dictionary<string, string> jsonObject)
+        public IActionResult ImportFormFields([FromBody] Dictionary<string, object> args)
         {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
             PdfRenderer pdfviewer;
             if (Startup.isRedisCacheEnable)
                 pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
             else
-                pdfviewer = new PdfRenderer(_mCache);
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
             object jsonResult = pdfviewer.ImportFormFields(jsonObject);
-            return Content(JsonConvert.SerializeObject(jsonResult));
+            return Content(JsonSerializer.Serialize(jsonResult));
         }
 
 
@@ -308,18 +359,16 @@ namespace ej2_pdfviewer_web_service.Controllers
 
         private string GetDocumentPath(string document)
         {
-            string documentPath = string.Empty;
             if (!System.IO.File.Exists(document))
             {
-                string path =  Path.Combine(_hostingEnvironment.ContentRootPath, "Data", document);
-                if (System.IO.File.Exists(path))
-                    documentPath = path;
+                string documentPath = Path.Combine(path, document);
+                if (System.IO.File.Exists(documentPath))
+                    return documentPath;
+                else
+                    return string.Empty;
             }
             else
-            {
-                documentPath = document;
-            }
-            return documentPath;
+                return document;
         }
     }
 }
