@@ -57,9 +57,7 @@ docker run -d -p 6001:80 –e SYNCFUSION_LICENSE_KEY=YOUR_LICENSE_KEY syncfusion
 ```
 
 For Ex: docker run -d -p 6001:80 –e 
-```
-SYNCFUSION_LICENSE_KEY=Mzg1ODMzQDMxMzgyZTM0MmUzMGdFRGJvUno1MUx4Tit4S09CeS9xRHZzZU4ySVBjQVFuT0VpdWpHUWJ6aXM9 syncfusion/
-```
+
 pdfviewer-server:latest 
 Now the PDF Viewer server Docker instance runs in the localhost with the provided port number http://localhost:6001. Open this link in the browser and navigate to the PDF Viewer Web API control http://localhost:6001/api/pdfviewer. It returns the default get method response. 
  
