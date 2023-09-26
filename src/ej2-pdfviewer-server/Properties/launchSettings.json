@@ -27,6 +27,7 @@
         "SYNCFUSION_LICENSE_KEY": "<License_Key_Development>",
         "DOCUMENT_SLIDING_EXPIRATION_TIME": "10",
         "REDIS_CACHE_CONNECTION_STRING": "",
+        "DOCUMENT_PATH": "",
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "applicationUrl": "http://localhost:62978/"

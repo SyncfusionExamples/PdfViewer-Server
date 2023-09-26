@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -27,7 +28,7 @@ namespace ej2_pdfviewer_web_service
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
-            services.AddMvc();            
+            services.AddMvc(endPoint => endPoint.EnableEndpointRouting = false);            
             string redisCacheConnectionString = Configuration["REDIS_CACHE_CONNECTION_STRING"];
             if (redisCacheConnectionString != null && redisCacheConnectionString != string.Empty)
             {

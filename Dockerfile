@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.1-aspnetcore-runtime AS base
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 
 RUN ln -s /lib/x86_64-linux-gnu/libdl-2.24.so /lib/x86_64-linux-gnu/libdl.so
 
@@ -8,10 +8,12 @@ RUN ln -s libgdiplus.so gdiplus.dll
 
 WORKDIR /app
 EXPOSE 80
+EXPOSE 443
 ENV SYNCFUSION_LICENSE_KEY=""
 ENV DOCUMENT_SLIDING_EXPIRATION_TIME="10"
 ENV REDIS_CACHE_CONNECTION_STRING=""
-FROM microsoft/dotnet:2.1-sdk AS build
+ENV DOCUMENT_PATH=""
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /source
 COPY ["src/ej2-pdfviewer-server/ej2-pdfviewer-server.csproj", "./ej2-pdfviewer-server/ej2-pdfviewer-server.csproj"]
 RUN dotnet restore "./ej2-pdfviewer-server/ej2-pdfviewer-server.csproj"
