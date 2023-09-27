@@ -20,7 +20,7 @@ namespace ej2_pdfviewer_web_service
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseKestrel(options =>
+                .ConfigureKestrel(options =>
                 {
                     options.Limits.MaxRequestBodySize = 1000000000;
                 })

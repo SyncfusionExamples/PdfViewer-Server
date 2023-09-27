@@ -137,6 +137,23 @@ namespace ej2_pdfviewer_web_service.Controllers
         [AcceptVerbs("Post")]
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
+        [Route("RenderPdfTexts")]
+        //Post action for processing the PDF texts  
+        public IActionResult RenderPdfTexts([FromBody] Dictionary<string, object> args)
+        {
+            Dictionary<string, string> jsonObject = args.ToDictionary(k => k.Key, k => k.Value?.ToString());
+            PdfRenderer pdfviewer;
+            if (Startup.isRedisCacheEnable)
+                pdfviewer = new PdfRenderer(_mCache, _dCache, _slidingTime);
+            else
+                pdfviewer = new PdfRenderer(_mCache, _slidingTime);
+            object jsonResult = pdfviewer.GetDocumentText(jsonObject);
+            return Content(JsonSerializer.Serialize(jsonResult));
+        }
+
+        [AcceptVerbs("Post")]
+        [HttpPost]
+        [EnableCors("AllowAllOrigins")]
         [Route("RenderAnnotationComments")]
         public IActionResult RenderAnnotationComments([FromBody] Dictionary<string, object> args)
         {
