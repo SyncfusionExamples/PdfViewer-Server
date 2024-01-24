@@ -1,31 +1,30 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 RUN ln -s /lib/x86_64-linux-gnu/libdl.so.2 /lib/x86_64-linux-gnu/libdl.so
  
 # install System.Drawing native dependencies
 RUN apt-get update && apt-get install -y --allow-unauthenticated libgdiplus libc6-dev libx11-dev
 RUN ln -s libgdiplus.so gdiplus.dll
-
+USER app
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
-ENV SYNCFUSION_LICENSE_KEY=""
-ENV DOCUMENT_SLIDING_EXPIRATION_TIME="10"
-ENV REDIS_CACHE_CONNECTION_STRING=""
-ENV DOCUMENT_PATH=""
+EXPOSE 8080
+EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /source
-COPY ["src/ej2-pdfviewer-server/ej2-pdfviewer-server.csproj", "./ej2-pdfviewer-server/ej2-pdfviewer-server.csproj"]
-RUN dotnet restore "./ej2-pdfviewer-server/ej2-pdfviewer-server.csproj"
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["ej2-pdfviewer-server-dotnet8/ej2-pdfviewer-server-dotnet8.csproj", "ej2-pdfviewer-server-dotnet8/"]
+RUN dotnet restore "./ej2-pdfviewer-server-dotnet8/./ej2-pdfviewer-server-dotnet8.csproj"
 COPY . .
-WORKDIR "/source/src"
-RUN dotnet build -c Release -o /app
+WORKDIR "/src/ej2-pdfviewer-server-dotnet8"
+RUN dotnet build "./ej2-pdfviewer-server-dotnet8.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
-RUN dotnet publish -c Release -o /app
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./ej2-pdfviewer-server-dotnet8.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app .
-ENTRYPOINT ["dotnet", "ej2-pdfviewer-server.dll"]
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "ej2-pdfviewer-server-dotnet8.dll"]
